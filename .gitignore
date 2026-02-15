@@ -1,6 +1,7 @@
 .deps/
 .DS_Store
 build/
+out/
 xcuserdata/
 project.xcworkspace/
 Makefile
@@ -32,5 +33,10 @@ lib*.a
 /Source_Files/*.exe
 /*.zip
 /*.tar.bz2
+/switch/build/
+/switch/*.elf
+/switch/*.nro
+/switch/*.nacp
+/switch/*.map
 
 .vscode/

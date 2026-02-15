@@ -1,0 +1,14 @@
+FROM localhost/pacman-packages-switch-audio-test:latest
+
+ENV DEVKITPRO=/opt/devkitpro \
+    DEVKITARM=/opt/devkitpro/devkitA64
+
+WORKDIR /work
+
+# Fail early if the expected Switch toolchain pieces are missing.
+RUN test -x /opt/devkitpro/devkitA64/bin/aarch64-none-elf-g++ \
+ && test -f /opt/devkitpro/libnx/switch_rules \
+ && dkp-pacman -Q switch-sdl2 >/dev/null \
+ && dkp-pacman -Q switch-sdl2_ttf >/dev/null \
+ && dkp-pacman -Q switch-sdl2_image >/dev/null \
+ && dkp-pacman -Q switch-openal-soft >/dev/null
