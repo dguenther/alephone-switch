@@ -163,7 +163,7 @@ void
 TopLevelLogger::logMessageV(const char* inDomain, int inLevel, const char* inFile, int inLine, const char* inMessage, va_list inArgs) {
     // Obviously eventually this will be settable more dynamically...
     // Also eventually some logged messages could be posted in a dialog in addition to appended to the file.
-    if(sOutputFile != NULL && inLevel < sLoggingThreshhold) {
+    if(inLevel < sLoggingThreshhold) {
         char	stringBuffer[kStringBufferSize];
         auto& log_data = getLogData();
 
@@ -180,8 +180,9 @@ TopLevelLogger::logMessageV(const char* inDomain, int inLevel, const char* inFil
     
             theString += "while ";
             theString += log_data.mContextStack[depth];
-            
-            fprintf(sOutputFile, "%s\n", theString.c_str());
+
+            if (sOutputFile)
+                fprintf(sOutputFile, "%s\n", theString.c_str());
 			fprintf(stderr, "%s\n", theString.c_str());
         }
         
@@ -198,10 +199,11 @@ TopLevelLogger::logMessageV(const char* inDomain, int inLevel, const char* inFil
         else
             theString += "\n";
         
-        fprintf(sOutputFile, "%s", theString.c_str());
+        if (sOutputFile)
+            fprintf(sOutputFile, "%s", theString.c_str());
 		fprintf(stderr, "%s", theString.c_str());
         
-        if(sFlushOutput)
+        if(sFlushOutput && sOutputFile)
                 fflush(sOutputFile);
         
         log_data.mMostRecentCommonStackDepth = log_data.mContextStack.size();

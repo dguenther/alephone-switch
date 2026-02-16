@@ -6,7 +6,7 @@ IMAGE_TAG="${IMAGE_TAG:-alephone-switch}"
 
 podman build -t "${IMAGE_TAG}" -f "${ROOT_DIR}/containers/switch/Containerfile" "${ROOT_DIR}"
 
-podman run --rm -it \
+podman run --rm \
   -v "${ROOT_DIR}":/work:Z \
   -w /work \
   --userns keep-id \

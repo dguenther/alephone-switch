@@ -173,6 +173,9 @@ char get_path_list_separator()
 
 static std::string _get_local_data_path()
 {
+#if defined(__SWITCH__)
+	return "sdmc:/switch/alephone";
+#else
 	static std::string local_dir = "";
 	if (local_dir.empty())
 	{
@@ -181,6 +184,7 @@ static std::string _get_local_data_path()
 			local_dir = std::string(home) + "/.alephone";
 	}
 	return local_dir;
+#endif
 }
 
 std::string get_data_path(CSPathType type)
@@ -194,8 +198,12 @@ std::string get_data_path(CSPathType type)
 			path = _get_local_data_path();
 			break;
 		case kPathDefaultData:
+#if defined(__SWITCH__)
+			path = _get_local_data_path();
+#else
 #ifdef PKGDATADIR
 			path = PKGDATADIR;
+#endif
 #endif
 			break;
 		case kPathLegacyData:
@@ -234,4 +242,3 @@ std::string get_application_identifier()
 
 
 #endif
-

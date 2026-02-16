@@ -19,8 +19,6 @@
 #ifndef __PINGER_H
 #define __PINGER_H
 
-#if !defined(DISABLE_NETWORKING)
-
 #include "NetworkInterface.h"
 #include <unordered_map>
 #include <atomic>
@@ -46,5 +44,4 @@ private:
 	std::unordered_map<uint16_t, PingAddress> _registered_ipv4s;
 };
 
-#endif
 #endif

@@ -231,9 +231,7 @@ void NetCancelJoin(void);
 void NetChangeColors(int16 color, int16 team);
 void reassign_player_colors(short player_index, short num_players);
 
-#if !defined(DISABLE_NETWORKING)
 std::weak_ptr<Pinger> NetGetPinger();
-#endif
 void NetCreatePinger();
 void NetRemovePinger();
 

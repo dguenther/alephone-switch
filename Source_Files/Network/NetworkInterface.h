@@ -19,9 +19,18 @@
 #ifndef NETWORK_INTERFACE_H
 #define NETWORK_INTERFACE_H
 
-#include <asio.hpp>
-#include <string>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <array>
+#include <memory>
 #include <optional>
+#include <string>
+
+#if !defined(DISABLE_NETWORKING)
+
+#include <asio.hpp>
 
 class IPaddress {
 private:
@@ -119,5 +128,87 @@ public:
     std::unique_ptr<TCPlistener> tcp_open_listener(uint16_t port);
     std::optional<IPaddress> resolve_address(const std::string& host, uint16_t port);
 };
+
+#else
+
+class IPaddress {
+private:
+    uint16_t _port = 0;
+    std::array<unsigned char, 4> _address{0, 0, 0, 0};
+
+public:
+    IPaddress() = default;
+    IPaddress(const std::string&, uint16_t port) : _port(port) {}
+    IPaddress(const uint8_t ip[4], uint16_t port) : _port(port) {
+        _address[0] = ip[0];
+        _address[1] = ip[1];
+        _address[2] = ip[2];
+        _address[3] = ip[3];
+    }
+    bool is_v4() const { return true; }
+    std::string address() const {
+        return std::to_string(_address[0]) + "." + std::to_string(_address[1]) + "." +
+               std::to_string(_address[2]) + "." + std::to_string(_address[3]);
+    }
+    std::array<unsigned char, 4> address_bytes() const { return _address; }
+    uint16_t port() const { return _port; }
+    void set_port(uint16_t port) { _port = port; }
+    void set_address(const std::string&) {}
+    void set_address(const uint8_t ip[4]) {
+        _address[0] = ip[0];
+        _address[1] = ip[1];
+        _address[2] = ip[2];
+        _address[3] = ip[3];
+    }
+
+    bool operator==(const IPaddress& other) const { return _port == other._port && _address == other._address; }
+    bool operator!=(const IPaddress& other) const { return !(*this == other); }
+};
+
+/* missing from AppleTalk.h */
+#define ddpMaxData 1500
+
+struct UDPpacket
+{
+    IPaddress address;
+    std::array<uint8_t, ddpMaxData> buffer;
+    int data_size;
+};
+
+class UDPsocket {
+public:
+    int64_t broadcast_send(const UDPpacket&) { return -1; }
+    int64_t send(const UDPpacket&) { return -1; }
+    int64_t receive(UDPpacket&) { return -1; }
+    void register_receive_async(UDPpacket&) {}
+    int64_t receive_async(int) { return -1; }
+    bool broadcast(bool) { return false; }
+    int64_t check_receive() const { return -1; }
+};
+
+class TCPsocket {
+public:
+    int64_t send(uint8_t*, size_t) { return -1; }
+    int64_t receive(uint8_t*, size_t) { return -1; }
+    IPaddress remote_address() const { return IPaddress(); }
+    bool set_non_blocking(bool) { return false; }
+};
+
+class TCPlistener {
+public:
+    std::unique_ptr<TCPsocket> accept_connection() { return nullptr; }
+    bool set_non_blocking(bool) { return false; }
+};
+
+class NetworkInterface {
+public:
+    NetworkInterface() = default;
+    std::unique_ptr<UDPsocket> udp_open_socket(uint16_t) { return nullptr; }
+    std::unique_ptr<TCPsocket> tcp_connect_socket(const IPaddress&) { return nullptr; }
+    std::unique_ptr<TCPlistener> tcp_open_listener(uint16_t) { return nullptr; }
+    std::optional<IPaddress> resolve_address(const std::string&, uint16_t) { return std::nullopt; }
+};
+
+#endif
 
 #endif // NETWORK_INTERFACE_H

@@ -1,9 +1,20 @@
 FROM localhost/pacman-packages-switch-audio-test:latest
 
 ENV DEVKITPRO=/opt/devkitpro \
-    DEVKITARM=/opt/devkitpro/devkitA64
+    DEVKITARM=/opt/devkitpro/devkitA64 \
+    PATH=/opt/devkitpro/devkitA64/bin:/opt/devkitpro/tools/bin:/opt/devkitpro/portlibs/switch/bin:${PATH}
 
 WORKDIR /work
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      autoconf \
+      automake \
+      autoconf-archive \
+      libtool \
+      make \
+      pkg-config \
+ && rm -rf /var/lib/apt/lists/*
 
 # Fail early if the expected Switch toolchain pieces are missing.
 RUN test -x /opt/devkitpro/devkitA64/bin/aarch64-none-elf-g++ \

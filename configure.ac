@@ -1,4 +1,4 @@
-shecdnl Process this file with autoconf to produce a configure script.
+dnl Process this file with autoconf to produce a configure script.
 dnl Written by Christian Bauer and the Aleph One developers.
 
 AC_INIT([Aleph One],m4_esyscmd([grep '^#define A1_DATE_VERSION' Source_Files/Misc/alephversion.h | sed -e 's/\(.*\"\)\(.*\)\(\"\)/\2/g' | tr -d '\n']),[https://github.com/Aleph-One-Marathon/alephone/issues],[AlephOne],[https://alephone.lhowon.org/])
@@ -25,6 +25,7 @@ AC_DEFUN([AX_ARG_WITH],
            AC_ARG_WITH([$1], AS_HELP_STRING([--without-$1], [do not use $2])) ])
 
 AX_ARG_ENABLE([opengl], [OpenGL rendering])
+AX_ARG_ENABLE([networking], [networking play and internet services])
 
 AX_ARG_WITH([sdl_image], [SDL2_image support])
 AX_ARG_WITH([curl], [cURL for HTTP communication])
@@ -72,6 +73,11 @@ AS_CASE([$target],
 AM_CONDITIONAL([MAKE_WINDOWS], [test "x$make_windows" = "xtrue"])
 AM_CONDITIONAL([INSTALL_MIME], [test "x$install_mime" = "xtrue"])
 
+AS_CASE([$host],
+        [aarch64-none-elf],
+        [ build_switch=true ])
+AM_CONDITIONAL([BUILD_SWITCH], [test "x$build_switch" = "xtrue"])
+
 dnl The standalone hub option
 AC_ARG_ENABLE([standalone_hub],
               AS_HELP_STRING([--enable-standalone-hub],
@@ -89,6 +95,15 @@ AC_ARG_ENABLE([steam],
 AM_CONDITIONAL([STEAM], [test x"$enable_steam" = x"yes"])
 AS_IF([test x"$enable_steam" = x"yes"],
       [ AC_DEFINE([HAVE_STEAM], [1], [Use Steam])])
+
+have_networking=true
+AS_IF([test "x$enable_networking" = "xno"],
+      [ have_networking=false
+        AC_DEFINE([DISABLE_NETWORKING], [1], [Disable networking features]) ])
+AM_CONDITIONAL([BUILD_NETWORKING], [test "x$have_networking" = "xtrue"])
+
+AS_IF([test x"$enable_standalone_hub" = x"yes" && test "x$have_networking" != "xtrue"],
+      [AC_MSG_ERROR([Standalone hub requires networking. Reconfigure without --disable-networking.])])
 
 dnl Set target system name.
 AC_DEFINE_UNQUOTED([TARGET_PLATFORM], ["$target_os $target_cpu"], [Target platform name])
@@ -133,9 +148,10 @@ AX_CHECK_BOOST_HEADER([boost/uuid/uuid.hpp])
 dnl AX_CHECK_BOOST_HEADER([boost/uuid/uuid_generators.hpp])
 dnl AX_CHECK_BOOST_HEADER([boost/uuid/uuid_io.hpp])
 
-AC_LANG_PUSH(C++)
-AC_CHECK_HEADER([asio.hpp], , [AC_MSG_ERROR([You need asio to build Aleph One.])])
-AC_LANG_POP(C++)
+AS_IF([test "x$have_networking" = "xtrue"],
+      [ AC_LANG_PUSH(C++)
+        AC_CHECK_HEADER([asio.hpp], , [AC_MSG_ERROR([You need asio to build Aleph One.])])
+        AC_LANG_POP(C++) ])
 
 dnl Check for library functions.
 AC_CHECK_FUNCS([snprintf vsnprintf], , AC_MSG_ERROR([You need snprintf and vsnprintf to run Aleph One.]))     
@@ -144,13 +160,14 @@ AC_CHECK_FUNC([mkstemp],
               [AC_DEFINE([LUA_USE_MKSTEMP], [1], [mkstemp() available])])
 
 dnl Check for net functions.
-AC_SEARCH_LIBS([gethostbyname], [nsl])
-AC_SEARCH_LIBS([socket], [socket],
-               ,
-               [AC_CHECK_LIB([nsl], [socket],
-                             [ LIBS="$LIBS -lsocket -lnsl" ],
-                             ,
-                             [-lsocket])])
+AS_IF([test "x$have_networking" = "xtrue"],
+      [ AC_SEARCH_LIBS([gethostbyname], [nsl])
+        AC_SEARCH_LIBS([socket], [socket],
+                       ,
+                       [AC_CHECK_LIB([nsl], [socket],
+                                     [ LIBS="$LIBS -lsocket -lnsl" ],
+                                     ,
+                                     [-lsocket])]) ])
 
 dnl Check for libraries.
 
@@ -348,6 +365,7 @@ AS_ECHO([""])
 AS_ECHO(["Summary of optional features:"])
 AS_ECHO([""])
 AX_PRINT_SUMMARY([opengl])
+AX_PRINT_SUMMARY([networking])
 AX_PRINT_SUMMARY([sdl_image])
 AX_PRINT_SUMMARY([curl])
 AX_PRINT_SUMMARY([zzip])

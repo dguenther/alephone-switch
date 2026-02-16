@@ -78,7 +78,13 @@
 #include "preferences.h"
 
 #include <boost/algorithm/string/predicate.hpp>
+#ifdef __SWITCH__
+#include <filesystem>
+#include <system_error>
+#include <random>
+#else
 #include <boost/filesystem.hpp>
+#endif
 
 #ifdef HAVE_NFD
 #include "nfd.h"
@@ -86,8 +92,13 @@
 #endif
 
 namespace io = boost::iostreams;
+#ifdef __SWITCH__
+namespace sys = std;
+namespace fs = std::filesystem;
+#else
 namespace sys = boost::system;
 namespace fs = boost::filesystem;
+#endif
 
 // From shell_sdl.cpp
 extern vector<DirectorySpecifier> data_search_path;
@@ -107,6 +118,15 @@ static int to_posix_code_or_unknown(sys::error_code ec)
 	const auto cond = ec.default_error_condition();
 	return cond.category() == sys::generic_category() ? cond.value() : unknown_filesystem_error;
 }
+
+#ifdef __SWITCH__
+static time_t to_time_t(fs::file_time_type tp)
+{
+	auto sys_time = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+		tp - fs::file_time_type::clock::now() + std::chrono::system_clock::now());
+	return std::chrono::system_clock::to_time_t(sys_time);
+}
+#endif
 
 #ifdef __WIN32__
 static fs::path utf8_to_path(const std::string& utf8) { return utf8_to_wide(utf8); }
@@ -529,7 +549,11 @@ TimeType FileSpecifier::GetDate()
 	sys::error_code ec;
 	const auto mtime = fs::last_write_time(utf8_to_path(name), ec);
 	err = to_posix_code_or_unknown(ec);
+#ifdef __SWITCH__
+	return err == 0 ? to_time_t(mtime) : 0;
+#else
 	return err == 0 ? mtime : 0;
+#endif
 }
 
 static const char * alephone_extensions[] = {
@@ -803,7 +827,15 @@ bool FileSpecifier::SetNameWithPath(const char* NameWithPath, const DirectorySpe
 
 void FileSpecifier::SetTempName(const FileSpecifier& other)
 {
+#ifdef __SWITCH__
+	static const char hex[] = "0123456789abcdef";
+	std::string suffix;
+	for (int i = 0; i < 6; ++i)
+		suffix += hex[rand() % 16];
+	name = other.name + suffix;
+#else
 	name = other.name + fs::unique_path("%%%%%%").string();
+#endif
 }
 
 // Get last element of path
@@ -888,9 +920,15 @@ bool FileSpecifier::ReadDirectory(vector<dir_entry> &vec)
 		const auto& entry = *it;
 		sys::error_code ignored_ec;
 		const auto type = entry.status(ignored_ec).type();
+#ifdef __SWITCH__
+		const bool is_dir = type == fs::file_type::directory;
+
+		if (!(is_dir || type == fs::file_type::regular))
+#else
 		const bool is_dir = type == fs::directory_file;
-		
+
 		if (!(is_dir || type == fs::regular_file))
+#endif
 			continue; // skip special or failed-to-stat files
 		
 		const auto basename = entry.path().filename();
@@ -898,7 +936,11 @@ bool FileSpecifier::ReadDirectory(vector<dir_entry> &vec)
 		if (!is_dir && basename.native()[0] == '.')
 			continue; // skip dot-prefixed regular files
 		
+#ifdef __SWITCH__
+		vec.emplace_back(path_to_utf8(basename), is_dir, to_time_t(fs::last_write_time(entry.path(), ignored_ec)));
+#else
 		vec.emplace_back(path_to_utf8(basename), is_dir, fs::last_write_time(entry.path(), ignored_ec));
+#endif
 	} 
 	
 	err = to_posix_code_or_unknown(ec);

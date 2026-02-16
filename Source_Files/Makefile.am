@@ -20,18 +20,32 @@ alephone_SOURCES = shell.h \
   \
   shell.cpp shell_misc.cpp shell_options.h shell_options.cpp main.cpp
 
+if BUILD_NETWORKING
+NETWORK_LINK_LIBS = Network/libnetwork.a Network/Metaserver/libmetaserver.a TCPMess/libtcpmess.a
+else
+NETWORK_LINK_LIBS = Network/libnetwork.a Network/Metaserver/libmetaserver.a TCPMess/libtcpmess.a
+endif
+
+if BUILD_SWITCH
+SWITCH_STUB_SOURCES = $(top_srcdir)/switch/platform_stubs.cpp
+else
+SWITCH_STUB_SOURCES =
+endif
+
+alephone_SOURCES += $(SWITCH_STUB_SOURCES)
+
 alephone_LDADD = \
   CSeries/libcseries.a Files/libfiles.a Videos/libvideos.a \
   GameWorld/libgameworld.a Input/libinput.a Lua/liba1lua.a Misc/libmisc.a \
-  ModelView/libmodelview.a Network/libnetwork.a Network/Metaserver/libmetaserver.a \
+  ModelView/libmodelview.a $(NETWORK_LINK_LIBS) \
   RenderMain/librendermain.a RenderOther/librenderother.a Sound/libsound.a \
   XML/libxml.a \
   \
   CSeries/libcseries.a Files/libfiles.a Videos/libvideos.a \
   GameWorld/libgameworld.a Input/libinput.a Lua/liba1lua.a Misc/libmisc.a \
-  ModelView/libmodelview.a Network/libnetwork.a Network/Metaserver/libmetaserver.a \
+  ModelView/libmodelview.a $(NETWORK_LINK_LIBS) \
   RenderMain/librendermain.a RenderOther/librenderother.a Sound/libsound.a \
-  TCPMess/libtcpmess.a XML/libxml.a
+  XML/libxml.a
 
 standalone_hub_SOURCES = shell.h shell.cpp shell_misc.cpp shell_options.h shell_options.cpp Network/StandaloneHub/standalone_hub_main.cpp
 
