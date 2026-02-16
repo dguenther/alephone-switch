@@ -246,10 +246,24 @@ InitializeLogging() {
     FileSpecifier fs = log_dir;
     fs += loggingFileName();
 
+#ifdef __SWITCH__
+    // Switch: Always log to stdout/stderr as well for nxlink debugging
+    fprintf(stderr, "[Switch] Initializing logging to: %s\n", fs.GetPath());
+#endif
+
 #ifdef __WIN32__
     sOutputFile = _wfopen(utf8_to_wide(fs.GetPath()).c_str(), L"a");
 #else
     sOutputFile = fopen(fs.GetPath(), "a");
+#endif
+
+#ifdef __SWITCH__
+    if(sOutputFile == NULL) {
+        fprintf(stderr, "[Switch] ERROR: Failed to open log file: %s (errno=%d)\n", fs.GetPath(), errno);
+        fprintf(stderr, "[Switch] Continuing with stderr logging only\n");
+    } else {
+        fprintf(stderr, "[Switch] Log file opened successfully\n");
+    }
 #endif
 
     sCurrentLogger = new TopLevelLogger;
@@ -258,6 +272,9 @@ InitializeLogging() {
 	    time_t theTime = time(NULL);
 	    const char* theTimeString = ctime(&theTime);
 	    fprintf(sOutputFile, "\n-------------------- %s\n\n", theTimeString == NULL ? "(timestamp unavailable)" : theTimeString);
+#ifdef __SWITCH__
+        fflush(sOutputFile);
+#endif
     }
 }
 
