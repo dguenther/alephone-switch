@@ -71,7 +71,6 @@ echo "[switch-build] Configuring cross-build in ${BUILD_DIR}"
     --disable-steam \
     --without-curl \
     --without-zzip \
-    --without-png \
     --without-miniupnpc \
     --without-vpx \
     --without-matroska \
