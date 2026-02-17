@@ -1888,7 +1888,10 @@ static key_binding_map default_shell_key_bindings = {
 	{ 6, { SDL_SCANCODE_MINUS,
 		static_cast<SDL_Scancode>(AO_SCANCODE_BASE_JOYSTICK_BUTTON + SDL_CONTROLLER_BUTTON_DPAD_DOWN)
 	} },
-	{ 7, { SDL_SCANCODE_SLASH
+	{ 7, { SDL_SCANCODE_SLASH,
+#ifdef __SWITCH__
+		static_cast<SDL_Scancode>(AO_SCANCODE_BASE_JOYSTICK_BUTTON + SDL_CONTROLLER_BUTTON_BACK)
+#endif
 	} },
 	{ 8, { SDL_SCANCODE_BACKSLASH
 	} },
