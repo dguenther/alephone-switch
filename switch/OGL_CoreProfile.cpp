@@ -684,6 +684,15 @@ void SwitchImmediateRenderer::drawArrays(GLenum mode, GLint first, GLsizei count
 		if (loc >= 0) glUniform1i(loc, (int)g_glState.alphaTestEnabled);
 		loc = glGetUniformLocation(curProg, "sw_alphaRef");
 		if (loc >= 0) glUniform1f(loc, g_glState.alphaRef);
+		// Clip plane equations may have changed after Shader::enable() was called
+		// (clip_to_window() runs after the shader is enabled). Re-upload current values.
+		for (int i = 0; i < 6; i++) {
+			char cpName[32];
+			snprintf(cpName, sizeof(cpName), "u_clipPlane[%d]", i);
+			GLint cpLoc = glGetUniformLocation(curProg, cpName);
+			if (cpLoc >= 0)
+				glUniform4fv(cpLoc, 1, glm::value_ptr(g_glState.clipPlane[i]));
+		}
 	}
 
 	// Call glDrawArrays directly via glad pointer
