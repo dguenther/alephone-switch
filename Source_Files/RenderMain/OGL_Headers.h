@@ -29,7 +29,12 @@
 
 #ifdef HAVE_OPENGL
 
-#ifdef __WIN32__
+#ifdef __SWITCH__
+
+#include <glad/glad.h>
+#include "OGL_CoreProfile.h"
+
+#elif defined(__WIN32__)
 
 #define GLEW_STATIC 1
 #include <GL/glew.h>

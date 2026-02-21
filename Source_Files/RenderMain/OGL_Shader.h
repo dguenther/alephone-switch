@@ -29,6 +29,16 @@
 
 #ifdef HAVE_OPENGL
 
+#ifdef __SWITCH__
+// Map ARB shader types/functions to core GL 4.3 equivalents
+typedef GLuint GLhandleARB;
+typedef char   GLcharARB;
+#define glGetUniformLocationARB      glGetUniformLocation
+#define GL_VERTEX_SHADER_ARB         GL_VERTEX_SHADER
+#define GL_FRAGMENT_SHADER_ARB       GL_FRAGMENT_SHADER
+#define GL_OBJECT_COMPILE_STATUS_ARB GL_COMPILE_STATUS
+#endif
+
 class Shader {
 
 friend class XML_ShaderParser;
@@ -109,6 +119,15 @@ private:
 	static const char* _uniform_names[NUMBER_OF_UNIFORM_LOCATIONS];
 	GLint _uniform_locations[NUMBER_OF_UNIFORM_LOCATIONS];
 	float _cached_floats[NUMBER_OF_UNIFORM_LOCATIONS];
+
+#ifdef __SWITCH__
+	bool  _switchUniformsQueried;
+	GLint _uMVP, _uMV, _uMVInv, _uNormal, _uTexMat;
+	GLint _uFogColor, _uFogDensity, _uFogStart, _uFogEnd;
+	GLint _uAlphaTestEnabled, _uAlphaRef;
+	GLint _uClipPlane[6];
+	void uploadSwitchMatrices();
+#endif
 
 	GLint getUniformLocation(UniformName name) { 
 		if (_uniform_locations[name] == -1) {

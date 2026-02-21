@@ -29,6 +29,29 @@
 #include "OGL_Render.h"
 #include "OGL_Textures.h"
 
+#ifdef __SWITCH__
+// FBO EXT → GL 4.3 core
+#define glGenFramebuffersEXT            glGenFramebuffers
+#define glBindFramebufferEXT            glBindFramebuffer
+#define glGenRenderbuffersEXT           glGenRenderbuffers
+#define glBindRenderbufferEXT           glBindRenderbuffer
+#define glRenderbufferStorageEXT        glRenderbufferStorage
+#define glFramebufferRenderbufferEXT    glFramebufferRenderbuffer
+#define glFramebufferTexture2DEXT       glFramebufferTexture2D
+#define glCheckFramebufferStatusEXT     glCheckFramebufferStatus
+#define glDeleteFramebuffersEXT         glDeleteFramebuffers
+#define glDeleteRenderbuffersEXT        glDeleteRenderbuffers
+#define GL_FRAMEBUFFER_EXT              GL_FRAMEBUFFER
+#define GL_RENDERBUFFER_EXT             GL_RENDERBUFFER
+#define GL_DEPTH_ATTACHMENT_EXT         GL_DEPTH_ATTACHMENT
+#define GL_COLOR_ATTACHMENT0_EXT        GL_COLOR_ATTACHMENT0
+#define GL_FRAMEBUFFER_COMPLETE_EXT     GL_FRAMEBUFFER_COMPLETE
+#define GL_FRAMEBUFFER_SRGB_EXT         GL_FRAMEBUFFER_SRGB
+// Texture rectangle → 2D (core profile only has GL_TEXTURE_2D; use normalized coords)
+// GL_TEXTURE_RECTANGLE_ARB, glActiveTextureARB, GL_TEXTURE0/1_ARB already defined
+// in OGL_CoreProfile.h via OGL_Headers.h — no redefinition needed here.
+#endif // __SWITCH__
+
 std::vector<FBO *> FBO::active_chain;
 
 FBO::FBO(GLuint w, GLuint h, bool srgb) : _h(h), _w(w), _srgb(srgb) {
@@ -55,7 +78,11 @@ void FBO::activate(bool clear, GLuint fboTarget) {
 		active_chain.push_back(this);
 		_fboTarget = fboTarget;
 		glBindFramebufferEXT(fboTarget, _fbo);
+#ifdef __SWITCH__
+		glGetIntegerv(GL_VIEWPORT, _savedViewport);
+#else
 		glPushAttrib(GL_VIEWPORT_BIT);
+#endif
 		glViewport(0, 0, _w, _h);
 		if (_srgb)
 			glEnable(GL_FRAMEBUFFER_SRGB_EXT);
@@ -69,7 +96,11 @@ void FBO::activate(bool clear, GLuint fboTarget) {
 void FBO::deactivate() {
 	if (active_chain.size() && active_chain.back() == this) {
 		active_chain.pop_back();
+#ifdef __SWITCH__
+		glViewport(_savedViewport[0], _savedViewport[1], _savedViewport[2], _savedViewport[3]);
+#else
 		glPopAttrib();
+#endif
 		
 		GLuint prev_fbo = 0;
 		bool prev_srgb = Using_sRGB;
@@ -88,7 +119,12 @@ void FBO::deactivate() {
 void FBO::draw() {
 	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, texID);
 	glEnable(GL_TEXTURE_RECTANGLE_ARB);
+#ifdef __SWITCH__
+	// GL_TEXTURE_2D uses normalized [0,1] coordinates, not pixel coordinates
+	OGL_RenderTexturedRect(0, 0, _w, _h, 0, 1.0f, 1.0f, 0);
+#else
 	OGL_RenderTexturedRect(0, 0, _w, _h, 0, _h, _w, 0);
+#endif
 	glDisable(GL_TEXTURE_RECTANGLE_ARB);
 }
 
@@ -195,8 +231,14 @@ void FBOSwapper::blend_multisample(FBO& other) {
 	
 	glClientActiveTextureARB(GL_TEXTURE1_ARB);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#ifdef __SWITCH__
+	// GL_TEXTURE_2D uses normalized [0,1] coordinates
+	GLfloat multi_coordinates[8] = { 0, 1.0f, 1.0f, 1.0f, 1.0f, 0, 0, 0 };
+	glTexCoordPointer(2, GL_FLOAT, 0, multi_coordinates);
+#else
 	GLint multi_coordinates[8] = { 0, GLint(other._h), GLint(other._w), GLint(other._h), GLint(other._w), 0, 0, 0 };
 	glTexCoordPointer(2, GL_INT, 0, multi_coordinates);
+#endif
 	glClientActiveTextureARB(GL_TEXTURE0_ARB);
 	
 	draw(true);

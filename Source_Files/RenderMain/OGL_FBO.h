@@ -29,6 +29,13 @@
 #include "OGL_Headers.h"
 #include <vector>
 
+#ifdef __SWITCH__
+// Provide GL_FRAMEBUFFER_EXT as the GL 4.3 core name
+#ifndef GL_FRAMEBUFFER_EXT
+#define GL_FRAMEBUFFER_EXT GL_FRAMEBUFFER
+#endif
+#endif
+
 class FBO {
 	
 private:
@@ -36,7 +43,10 @@ private:
 	GLuint _depthBuffer;
 	GLuint _fboTarget;
 	static std::vector<FBO *> active_chain;
-	
+#ifdef __SWITCH__
+	GLint _savedViewport[4];
+#endif
+
 public:
 	GLuint _w;
 	GLuint _h;

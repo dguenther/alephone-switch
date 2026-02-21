@@ -288,12 +288,53 @@ void FontSpecifier::OGL_Reset(bool IsStarting)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+#ifdef __SWITCH__
+	// GL_LUMINANCE_ALPHA is not available in GL 4.3 core profile; use GL_RG8 with swizzle
+	// so texture samples return (L,L,L,A) matching the old LA format behaviour.
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, TxtrWidth, TxtrHeight,
+		0, GL_RG, GL_UNSIGNED_BYTE, OGL_Texture);
+	{ static const GLint kFontSwizzle[4] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
+	  glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, kFontSwizzle); }
+#else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, TxtrWidth, TxtrHeight,
 		0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, OGL_Texture);
+#endif
  	
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	
+#ifdef __SWITCH__
+	// Display lists are not available in GL 4.3 core profile.
+	// Store per-glyph UV and advance data for direct rendering.
+	_glyph_ascent  = ascent_p;
+	_glyph_descent = descent_p;
+	_glyph_pad     = Pad;
+	memset(_glyphs, 0, sizeof(_glyphs));
+	{
+		GLfloat TWidNorm = GLfloat(1)/TxtrWidth;
+		GLfloat THtNorm  = GLfloat(1)/TxtrHeight;
+		for (int k=0; k<=LastLine; k++)
+		{
+			unsigned char Which = CharStarts[k];
+			GLfloat Top    = k   * (THtNorm * GlyphHeight);
+			GLfloat Bottom = (k+1)*(THtNorm * GlyphHeight);
+			int Pos = 0;
+			for (int m=0; m<CharCounts[k]; m++)
+			{
+				short Width = widths_p[Which];
+				int NewPos = Pos + Width;
+				_glyphs[Which].u0    = TWidNorm * Pos;
+				_glyphs[Which].v0    = Top;
+				_glyphs[Which].u1    = TWidNorm * NewPos;
+				_glyphs[Which].v1    = Bottom;
+				_glyphs[Which].width = Width;
+				_glyphs[Which].valid = true;
+				Pos = NewPos;
+				Which++;
+			}
+		}
+	}
+#else
  	// Allocate and create display lists of rendering commands
  	DispList = glGenLists(256);
  	GLfloat TWidNorm = GLfloat(1)/TxtrWidth;
@@ -330,6 +371,7 @@ void FontSpecifier::OGL_Reset(bool IsStarting)
  			Which++;
  		}
  	}
+#endif
 }
 
 
@@ -359,7 +401,17 @@ void FontSpecifier::OGL_Render(const char *Text)
 	for (size_t k=0; k<Len; k++)
 	{
 		unsigned char c = Text[k];
+#ifdef __SWITCH__
+		// Replicate what the display list did: translate-draw-translate
+		if (_glyphs[c].valid) {
+			glTranslatef(-_glyph_pad, 0, 0);
+			OGL_RenderTexturedRect(0, -_glyph_ascent, _glyphs[c].width, _glyph_ascent + _glyph_descent,
+			                       _glyphs[c].u0, _glyphs[c].v0, _glyphs[c].u1, _glyphs[c].v1);
+			glTranslatef(_glyphs[c].width - _glyph_pad, 0, 0);
+		}
+#else
 		glCallList(DispList+c);
+#endif
 	}
 	
 	glPopAttrib();

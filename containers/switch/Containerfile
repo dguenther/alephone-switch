@@ -22,4 +22,7 @@ RUN test -x /opt/devkitpro/devkitA64/bin/aarch64-none-elf-g++ \
  && dkp-pacman -Q switch-sdl2 >/dev/null \
  && dkp-pacman -Q switch-sdl2_ttf >/dev/null \
  && dkp-pacman -Q switch-sdl2_image >/dev/null \
- && dkp-pacman -Q switch-openal-soft >/dev/null
+ && dkp-pacman -Q switch-openal-soft >/dev/null \
+ && dkp-pacman -Q switch-mesa >/dev/null \
+ && dkp-pacman -Q switch-glad >/dev/null \
+ && dkp-pacman -Q switch-glm >/dev/null

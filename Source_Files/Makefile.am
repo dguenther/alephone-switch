@@ -27,12 +27,13 @@ NETWORK_LINK_LIBS = Network/libnetwork.a Network/Metaserver/libmetaserver.a TCPM
 endif
 
 if BUILD_SWITCH
-SWITCH_STUB_SOURCES = $(top_srcdir)/switch/platform_stubs.cpp
+SWITCH_SOURCES = $(top_srcdir)/switch/platform_stubs.cpp \
+	$(top_srcdir)/switch/OGL_CoreProfile.cpp
 else
-SWITCH_STUB_SOURCES =
+SWITCH_SOURCES =
 endif
 
-alephone_SOURCES += $(SWITCH_STUB_SOURCES)
+alephone_SOURCES += $(SWITCH_SOURCES)
 
 alephone_LDADD = \
   CSeries/libcseries.a Files/libfiles.a Videos/libvideos.a \
@@ -61,7 +62,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/Source_Files/CSeries -I$(top_srcdir)/Source_Files/
   -I$(top_srcdir)/Source_Files/Network/Metaserver \
   -I$(top_srcdir)/Source_Files/Videos -I$(top_srcdir)/Source_Files/RenderMain \
   -I$(top_srcdir)/Source_Files/RenderOther -I$(top_srcdir)/Source_Files/Sound \
-  -I$(top_srcdir)/Source_Files/XML -I$(top_srcdir)/Source_Files/TCPMess
+  -I$(top_srcdir)/Source_Files/XML -I$(top_srcdir)/Source_Files/TCPMess \
+  -I$(top_srcdir)/switch
 
 AlephOne_LDADD = $(alephone_LDADD) alephone-resources.o
 AlephOne_SOURCES = $(alephone_SOURCES)

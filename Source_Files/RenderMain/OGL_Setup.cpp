@@ -117,6 +117,15 @@ bool OGL_CheckExtension(const std::string extension) {
 #ifdef HAVE_OPENGL
 #ifdef __WIN32__
 	return glewIsSupported(extension.c_str());
+#elif defined(__SWITCH__)
+	// GL 4.3 core profile: glGetString(GL_EXTENSIONS) is deprecated; use glGetStringi
+	GLint numExts = 0;
+	glGetIntegerv(GL_NUM_EXTENSIONS, &numExts);
+	for (GLint i = 0; i < numExts; ++i) {
+		const char *ext = (const char *) glGetStringi(GL_EXTENSIONS, i);
+		if (ext && extension == ext) return true;
+	}
+	return false;
 #else
 	char *extensions = (char *) glGetString(GL_EXTENSIONS);
 	if (!extensions) return false;

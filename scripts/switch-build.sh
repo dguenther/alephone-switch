@@ -47,8 +47,8 @@ export AR="aarch64-none-elf-ar"
 export RANLIB="aarch64-none-elf-ranlib"
 export CFLAGS="${ARCH_FLAGS}"
 export CXXFLAGS="${ARCH_FLAGS} -std=gnu++17"
-export CPPFLAGS="-D__SWITCH__ -I${DEVKITPRO}/portlibs/switch/include"
-export LDFLAGS="-specs=${DEVKITPRO}/libnx/switch.specs ${ARCH_FLAGS} -L${DEVKITPRO}/portlibs/switch/lib"
+export CPPFLAGS="-D__SWITCH__ -I${DEVKITPRO}/portlibs/switch/include -I${ROOT_DIR}/switch"
+export LDFLAGS="-specs=${DEVKITPRO}/libnx/switch.specs ${ARCH_FLAGS} -L${DEVKITPRO}/portlibs/switch/lib -L${DEVKITPRO}/libnx/lib -lglad -lEGL -lglapi -ldrm_nouveau -lnx"
 export BOOST_ROOT="${DEVKITPRO}/portlibs/switch"
 
 echo "[switch-build] Regenerating autotools files"
@@ -67,7 +67,7 @@ echo "[switch-build] Configuring cross-build in ${BUILD_DIR}"
     --with-boost-libdir="${DEVKITPRO}/portlibs/switch/lib" \
     --with-boost-filesystem=boost_filesystem \
     --disable-networking \
-    --disable-opengl \
+    --enable-opengl \
     --disable-steam \
     --without-curl \
     --without-zzip \

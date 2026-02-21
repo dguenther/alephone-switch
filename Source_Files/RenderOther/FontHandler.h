@@ -133,6 +133,18 @@ public:
 	GLuint NearFilter = GL_LINEAR;
 	uint32 DispList;
 	static std::set<FontSpecifier*> *m_font_registry;
+#ifdef __SWITCH__
+	// Display-list replacement: per-glyph UV and advance data
+	struct GlyphInfo {
+		float u0, v0, u1, v1;  // normalized UV coords in font texture
+		int   width;            // glyph pixel width (for translation advance)
+		bool  valid;
+	};
+	GlyphInfo _glyphs[256];
+	int _glyph_ascent;   // font ascent (positive, above baseline)
+	int _glyph_descent;  // font descent (positive, below baseline)
+	int _glyph_pad;      // horizontal padding per glyph
+#endif
 #endif
 };
 

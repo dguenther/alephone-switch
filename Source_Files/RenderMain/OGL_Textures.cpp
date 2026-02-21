@@ -1195,8 +1195,13 @@ uint32 *TextureManager::Shrink(uint32 *Buffer)
 {
 	int NumPixels = int(LoadedWidth)*int(LoadedHeight);
 	GLuint *NewBuffer = new GLuint[NumPixels];
+#ifdef __SWITCH__
+	// gluScaleImage not available; upload full-size and let GL scale via mip generation
+	memcpy(NewBuffer, Buffer, LoadedWidth * LoadedHeight * sizeof(GLuint));
+#else
 	gluScaleImage(GL_RGBA, TxtrWidth, TxtrHeight, GL_UNSIGNED_BYTE, Buffer,
 		LoadedWidth, LoadedHeight, GL_UNSIGNED_BYTE, NewBuffer);
+#endif
 	
 	return (uint32 *)NewBuffer;
 }
@@ -1299,7 +1304,12 @@ void TextureManager::PlaceTexture(const ImageDescriptor *Image, bool normal_map)
 			} else 
 #endif
 			{
-				gluBuild2DMipmaps(GL_TEXTURE_2D, internalFormat, Image->GetWidth(), Image->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, Image->GetBuffer());
+	#ifdef __SWITCH__
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, Image->GetWidth(), Image->GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, Image->GetBuffer());
+			glGenerateMipmap(GL_TEXTURE_2D);
+#else
+			gluBuild2DMipmaps(GL_TEXTURE_2D, internalFormat, Image->GetWidth(), Image->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, Image->GetBuffer());
+#endif
 			}
 			mipmapsLoaded = true;
 			}
@@ -1670,8 +1680,14 @@ void LoadModelSkin(ImageDescriptor& SkinImage, short Collection, short CLUT)
 				else
 #endif
 				{
+#ifdef __SWITCH__
+					glTexImage2D(GL_TEXTURE_2D, 0, TxtrTypeInfo.ColorFormat, LoadedWidth, LoadedHeight,
+							 0, GL_RGBA, GL_UNSIGNED_BYTE, Image.get()->GetBuffer());
+					glGenerateMipmap(GL_TEXTURE_2D);
+#else
 					gluBuild2DMipmaps(GL_TEXTURE_2D, TxtrTypeInfo.ColorFormat, LoadedWidth, LoadedHeight,
 							  GL_RGBA, GL_UNSIGNED_BYTE, Image.get()->GetBuffer());
+#endif
 				}
 				mipmapsLoaded = true;
 			}

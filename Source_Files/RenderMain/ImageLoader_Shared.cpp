@@ -154,7 +154,27 @@ bool ImageDescriptor::Minify()
 		{
 			
 			uint32 *newPixels = new uint32[newWidth * newHeight];
+#ifdef __SWITCH__
+			// gluScaleImage not available on Switch; use simple 2x2 box filter downscale
+			for (int y = 0; y < newHeight; y++) {
+				for (int x = 0; x < newWidth; x++) {
+					int sx = x * 2, sy = y * 2;
+					const uint32 *s = Pixels + sy * Width + sx;
+					uint32 out = 0;
+					for (int c = 0; c < 4; c++) {
+						int sh = c * 8;
+						uint32 a0 = (s[0]>>sh)&0xFF;
+						uint32 a1 = (sx+1 < Width) ? (s[1]>>sh)&0xFF : a0;
+						uint32 b0 = (sy+1 < Height) ? (s[Width]>>sh)&0xFF : a0;
+						uint32 b1 = (sx+1 < Width && sy+1 < Height) ? (s[Width+1]>>sh)&0xFF : b0;
+						out |= ((a0 + a1 + b0 + b1 + 2) / 4) << sh;
+					}
+					newPixels[y * newWidth + x] = out;
+				}
+			}
+#else
 			gluScaleImage(GL_RGBA, Width, Height, GL_UNSIGNED_BYTE, Pixels, newWidth, newHeight, GL_UNSIGNED_BYTE, newPixels);
+#endif
 			delete []Pixels;
 			Pixels = newPixels;
 			Width = newWidth;

@@ -345,7 +345,10 @@ const double FullCircleReciprocal = 1/double(FULL_CIRCLE);
 
 
 // Number of static-effect rendering passes
+// GL core profile (Switch) has no glPolygonStipple
+#ifndef __SWITCH__
 #define USE_STIPPLE_STATIC_EFFECT
+#endif
 #ifdef USE_STIPPLE_STATIC_EFFECT
 // For stippling
 const int StaticEffectPasses = 4;
@@ -3029,6 +3032,7 @@ bool OGL_RenderText(short BaseX, short BaseY, const char *Text, unsigned char r,
 {
 	if (!OGL_IsActive()) return false;
 	
+#ifndef __SWITCH__
 	// Create display list for the current text string;
 	// use the "standard" text-font display list (display lists can be nested)
 	GLuint TextDisplayList;
@@ -3036,6 +3040,7 @@ bool OGL_RenderText(short BaseX, short BaseY, const char *Text, unsigned char r,
 	glNewList(TextDisplayList,GL_COMPILE);
 	GetOnScreenFont().OGL_Render(Text);
 	glEndList();
+#endif
 	
 	// Place the text in the foreground of the display
 	SetProjectionType(Projection_Screen);
@@ -3081,17 +3086,26 @@ bool OGL_RenderText(short BaseX, short BaseY, const char *Text, unsigned char r,
 	
 	glLoadIdentity();
 	glTranslatef(BaseX+1.0F,BaseY+1.0F,Depth);
+#ifdef __SWITCH__
+	GetOnScreenFont().OGL_Render(Text);
+#else
 	glCallList(TextDisplayList);
-	
+#endif
 	// Foreground
 	SglColor3f(r/255.0f,g/255.0f,b/255.0f);
 
 	glLoadIdentity();
 	glTranslatef(BaseX,BaseY,Depth);
+#ifdef __SWITCH__
+	GetOnScreenFont().OGL_Render(Text);
+#else
 	glCallList(TextDisplayList);
+#endif
 		
+#ifndef __SWITCH__
 	// Clean up
 	glDeleteLists(TextDisplayList,1);
+#endif
 	glPopMatrix();
 	
 	return true;

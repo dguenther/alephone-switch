@@ -40,6 +40,25 @@
 #include "OGL_Textures.h"
 #endif
 
+#ifdef __SWITCH__
+#include "OGL_CoreProfile.h"
+
+static void setMesaConfig() {
+    // Disables error checking and saves CPU time (useful for production):
+    setenv("MESA_NO_ERROR", "1", 1);
+
+    // Uncomment below to enable Mesa logging:
+    //setenv("EGL_LOG_LEVEL", "debug", 1);
+    //setenv("MESA_VERBOSE", "all", 1);
+    //setenv("NOUVEAU_MESA_DEBUG", "1", 1);
+
+    // Uncomment below to enable shader debugging in Nouveau:
+    //setenv("NV50_PROG_OPTIMIZE", "0", 1);
+    //setenv("NV50_PROG_DEBUG", "1", 1);
+    //setenv("NV50_PROG_CHIPSET", "0x120", 1);
+}
+#endif // __SWITCH__
+
 #include "world.h"
 #include "map.h"
 #include "render.h"
@@ -887,6 +906,22 @@ static void change_screen_mode(int width, int height, int depth, bool nogl, bool
 	
 	if (need_mode_change(sdl_width, sdl_height, vmode_width, vmode_height, depth, nogl)) {
 #ifdef HAVE_OPENGL
+#ifdef __SWITCH__
+	// Switch: request GL 4.3 Core Profile via SDL
+	if (!nogl && screen_mode.acceleration != _no_acceleration) {
+		passed_shader = false;
+		flags |= SDL_WINDOW_OPENGL;
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   8);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  8);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	}
+#else
 	if (!nogl && screen_mode.acceleration != _no_acceleration) {
 		passed_shader = false;
 		flags |= SDL_WINDOW_OPENGL;
@@ -905,6 +940,7 @@ static void change_screen_mode(int width, int height, int depth, bool nogl, bool
 		}
 		SDL_GL_SetSwapInterval(Get_OGL_ConfigureData().WaitForVSync ? 1 : 0);
 	}
+#endif // __SWITCH__
 #endif 
 
 		
@@ -964,12 +1000,27 @@ static void change_screen_mode(int width, int height, int depth, bool nogl, bool
 	{
 		// see if we can actually run shaders
 		if (!context_created) {
-			SDL_GL_CreateContext(main_screen);
+			SDL_GLContext glctx = SDL_GL_CreateContext(main_screen);
+#ifdef __SWITCH__
+			if (glctx) {
+				setMesaConfig();
+				gladLoadGL();
+				SwitchOGL_Init();
+				context_created = true;
+				passed_shader = true;
+			} else {
+				fprintf(stderr, "[Switch] SDL_GL_CreateContext failed: %s\n", SDL_GetError());
+				screen_mode.acceleration = graphics_preferences->screen_mode.acceleration = _no_acceleration;
+			}
+#else
+			(void)glctx;
 			context_created = true;
+#endif
 		}
 #if defined (__WIN32__) && (HAVE_OPENGL)
 		glewInit();
 #endif
+#ifndef __SWITCH__
 		if (!OGL_CheckExtension("GL_ARB_vertex_shader") || !OGL_CheckExtension("GL_ARB_fragment_shader") || !OGL_CheckExtension("GL_ARB_shader_objects") || !OGL_CheckExtension("GL_ARB_shading_language_100"))
 		{
 			logWarning("OpenGL (Shader) renderer is not available");
@@ -986,6 +1037,7 @@ static void change_screen_mode(int width, int height, int depth, bool nogl, bool
 		{
 			passed_shader = true;
 		}
+#endif // !__SWITCH__
 	}
 //#endif
 
@@ -1058,7 +1110,19 @@ static void change_screen_mode(int width, int height, int depth, bool nogl, bool
 	}
 #ifdef HAVE_OPENGL
 	if (!context_created && !nogl && screen_mode.acceleration != _no_acceleration) {
-		SDL_GL_CreateContext(main_screen);
+		SDL_GLContext glctx = SDL_GL_CreateContext(main_screen);
+#ifdef __SWITCH__
+		if (glctx) {
+			setMesaConfig();
+			gladLoadGL();
+			SwitchOGL_Init();
+		} else {
+			fprintf(stderr, "[Switch] SDL_GL_CreateContext (fallback) failed: %s\n", SDL_GetError());
+			screen_mode.acceleration = graphics_preferences->screen_mode.acceleration = _no_acceleration;
+		}
+#else
+		(void)glctx;
+#endif
 		context_created = true;
 	}
 #endif

@@ -195,7 +195,11 @@ dnl Check for OpenGL.
 AS_IF([test "x$enable_opengl" != "xno"],
       [ AC_MSG_CHECKING([for OpenGL support])
         compiled_opengl=no
-        AS_CASE([$target],
+        AS_CASE([$host],
+                [aarch64-none-elf*],
+                [ dnl Nintendo Switch via libnx + mesa/nouveau + switch-glad
+                  SYS_GL_LIBS="-lglad -lEGL -lglapi -ldrm_nouveau"
+                  compiled_opengl=yes ],
                 [*-*-cygwin* | *-*-mingw32*],
                 [ SYS_GL_LIBS="-lGLEW -lopengl32 -lglu32"
                   LIBS="$LIBS -lstdc++" ],
@@ -205,23 +209,25 @@ AS_IF([test "x$enable_opengl" != "xno"],
                 [*-*-linux*],
                 [ SYS_GL_LIBS="-lGL -lpthread" ],
                 [ SYS_GL_LIBS="-lGL" ])
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-          #ifndef __DARWIN__
-          #include <GL/gl.h>
-          #else
-          #include <OpenGL/gl.h>
-          #endif
-          ]], [[]])],[ compiled_opengl=yes ],[])
+        AS_IF([test "x$compiled_opengl" != "xyes"],
+              [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+                #ifndef __DARWIN__
+                #include <GL/gl.h>
+                #else
+                #include <OpenGL/gl.h>
+                #endif
+                ]], [[]])],[ compiled_opengl=yes ],[])])
         AC_MSG_RESULT($compiled_opengl)
         AS_IF([test "x$compiled_opengl" = "xyes"],
               [ have_opengl=true
                 AC_DEFINE([HAVE_OPENGL], [1], [OpenGL support enabled])
-                AC_CHECK_LIB([GLU], [gluScaleImage],
-                             [SYS_GL_LIBS="$SYS_GL_LIBS -lGLU"],
-                             ,
-                             [$SYS_GL_LIBS])
-                LIBS="$LIBS $SYS_GL_LIBS"
-                AC_CHECK_HEADERS([GL/glext.h], [], [], [#include <GL/gl.h>]) ],
+                AS_IF([test "x$host" != "xaarch64-none-elf"],
+                      [AC_CHECK_LIB([GLU], [gluScaleImage],
+                                   [SYS_GL_LIBS="$SYS_GL_LIBS -lGLU"],
+                                   ,
+                                   [$SYS_GL_LIBS])
+                       AC_CHECK_HEADERS([GL/glext.h], [], [], [#include <GL/gl.h>])])
+                LIBS="$LIBS $SYS_GL_LIBS" ],
               [ AS_IF([test "x$enable_opengl" = "xyes"],
                       [AC_MSG_ERROR([OpenGL support requested but not available])],
                       [AC_MSG_WARN([OpenGL not available])]) ]) ])

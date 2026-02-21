@@ -122,7 +122,11 @@ bool OGL_DoFades(float Left, float Top, float Right, float Bottom)
 			break;
 		
 		case _randomize_fader_type:
+#ifdef __SWITCH__
+			UseFlatStatic = true;  // GL 4.3 core profile has no glLogicOp/GL_COLOR_LOGIC_OP
+#else
 			UseFlatStatic = TEST_FLAG(Get_OGL_ConfigureData().Flags,OGL_Flag_FlatStatic);
+#endif
 			if (UseFlatStatic)
 			{
 				for (int c=0; c<3; c++)
