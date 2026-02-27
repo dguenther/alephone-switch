@@ -327,13 +327,13 @@ void ScenarioChooser::handle_event(SDL_Event& e)
 		case SDL_CONTROLLERBUTTONDOWN:
 			switch (e.cbutton.button)
 			{
-				case SDL_CONTROLLER_BUTTON_A:
+				case AO_DEFAULT_CONFIRM_CONTROLLER_BUTTON:
 					if (selection_ >= 0)
 					{
 						done_ = true;
 					}
 					break;				
-				case SDL_CONTROLLER_BUTTON_B:
+				case AO_DEFAULT_CANCEL_CONTROLLER_BUTTON:
 					exit(0);
 				case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
 					move_selection(0, 1);
@@ -562,4 +562,3 @@ void ScenarioChooser::redraw(SDL_Window* window)
 	
 	SDL_UpdateWindowSurface(window);
 }
-

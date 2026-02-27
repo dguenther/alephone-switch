@@ -2197,10 +2197,10 @@ void dialog::event(SDL_Event &e)
 	  }
 	  else if (e.type == SDL_CONTROLLERBUTTONDOWN)
 	  {
-		  switch (e.cbutton.button) {
-			  case SDL_CONTROLLER_BUTTON_B:
-				  quit(-1);
-				  break;
+			  switch (e.cbutton.button) {
+				  case AO_DEFAULT_CANCEL_CONTROLLER_BUTTON:
+					  quit(-1);
+					  break;
 			  case SDL_CONTROLLER_BUTTON_DPAD_UP:
 			  case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
 				  activate_prev_widget();
@@ -2209,9 +2209,9 @@ void dialog::event(SDL_Event &e)
 			  case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
 				  activate_next_widget();
 				  break;
-			  case SDL_CONTROLLER_BUTTON_A:
-				  if (active_widget) active_widget->click(0, 0);
-				  break;
+				  case AO_DEFAULT_CONFIRM_CONTROLLER_BUTTON:
+					  if (active_widget) active_widget->click(0, 0);
+					  break;
 			  default:
 				  break;
 		  }

@@ -1327,7 +1327,7 @@ static void process_game_key(const SDL_Event &event)
 				case AO_SCANCODE_BASE_JOYSTICK_BUTTON + SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
 					process_main_menu_highlight_advance(false);
 					break;
-				case AO_SCANCODE_BASE_JOYSTICK_BUTTON + SDL_CONTROLLER_BUTTON_A:
+				case AO_SCANCODE_BASE_JOYSTICK_BUTTON + AO_DEFAULT_CONFIRM_CONTROLLER_BUTTON:
 					process_main_menu_highlight_select(false);
 					break;
 				case AO_SCANCODE_BASE_JOYSTICK_BUTTON + SDL_CONTROLLER_BUTTON_GUIDE:
