@@ -554,7 +554,12 @@ static void update_fps_display(SDL_Surface *s)
 			else
 				ms[0] = '\0';
 			
-			sprintf(fps, "%0.f fps %s", fps_counter.get(), ms);
+	#ifdef __SWITCH__
+		sprintf(fps, "%.0f fps %dx%d", fps_counter.get(),
+		        screen_mode.width, screen_mode.height);
+#else
+		sprintf(fps, "%0.f fps %s", fps_counter.get(), ms);
+#endif
 		}
 
 		FontSpecifier& Font = GetOnScreenFont();
