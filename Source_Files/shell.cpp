@@ -113,6 +113,10 @@
 
 #include "shell_options.h"
 
+#ifdef __SWITCH__
+#include "switch_display.h"
+#endif
+
 #ifdef HAVE_STEAM
 #include "steamshim_child.h"
 #endif
@@ -716,6 +720,13 @@ void main_event_loop(void)
 
 	while ((game_state = get_game_state()) != _quit_game) {
 		uint64_t cur_time = machine_tick_count();
+#ifdef __SWITCH__
+		{
+			if (switch_check_display_change(nullptr, nullptr)) {
+				change_screen_mode(&graphics_preferences->screen_mode, true);
+			}
+		}
+#endif
 		bool yield_time = false;
 		bool poll_event = false;
 

@@ -42,6 +42,7 @@
 
 #ifdef __SWITCH__
 #include "OGL_CoreProfile.h"
+#include "switch_display.h"
 
 static void setMesaConfig() {
     // Disables error checking and saves CPU time (useful for production):
@@ -1200,6 +1201,16 @@ bool get_auto_resolution_size(short *w, short *h, struct screen_mode_data *mode)
 	{
 		short width = Screen::instance()->ModeWidth(0);
 		short height = Screen::instance()->ModeHeight(0);
+#ifdef __SWITCH__
+		int display_w = 0;
+		int display_h = 0;
+		if (switch_get_display_resolution(&display_w, &display_h)) {
+			width = static_cast<short>(display_w);
+			height = static_cast<short>(display_h);
+			screen_mode.width = width;
+			screen_mode.height = height;
+		}
+#endif
 		// in windowed mode, use a window one step down from fullscreen size
 		if (!screen_mode.fullscreen &&
 			((width > 640) || (height > 480)) &&

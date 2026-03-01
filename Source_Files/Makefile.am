@@ -28,7 +28,8 @@ endif
 
 if BUILD_SWITCH
 SWITCH_SOURCES = $(top_srcdir)/switch/platform_stubs.cpp \
-	$(top_srcdir)/switch/OGL_CoreProfile.cpp
+	$(top_srcdir)/switch/OGL_CoreProfile.cpp \
+	$(top_srcdir)/switch/switch_display.cpp
 else
 SWITCH_SOURCES =
 endif
