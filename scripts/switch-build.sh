@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${ROOT_DIR}/out/switch"
 BUILD_DIR="${OUT_DIR}/build-autotools"
+ICON_PATH="${ROOT_DIR}/switch/alephone-icon-256.jpg"
 
 if [[ ! -f "${ROOT_DIR}/configure.ac" ]]; then
   echo "Missing ${ROOT_DIR}/configure.ac" >&2
@@ -91,8 +92,13 @@ if [[ ! -f "${ALEPHONE_ELF}" ]]; then
   exit 1
 fi
 
+if [[ ! -f "${ICON_PATH}" ]]; then
+  echo "Expected icon not found at ${ICON_PATH}" >&2
+  exit 1
+fi
+
 cp -f "${ALEPHONE_ELF}" "${OUT_DIR}/alephone.elf"
 nacptool --create "Aleph One" "Aleph One Team" "0.1.0" "${OUT_DIR}/alephone.nacp"
-elf2nro "${OUT_DIR}/alephone.elf" "${OUT_DIR}/alephone.nro" --nacp="${OUT_DIR}/alephone.nacp"
+elf2nro "${OUT_DIR}/alephone.elf" "${OUT_DIR}/alephone.nro" --nacp="${OUT_DIR}/alephone.nacp" --icon="${ICON_PATH}"
 
 echo "[switch-build] Output: ${OUT_DIR}/alephone.nro"
