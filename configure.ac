@@ -148,7 +148,7 @@ AX_CHECK_BOOST_HEADER([boost/uuid/uuid.hpp])
 dnl AX_CHECK_BOOST_HEADER([boost/uuid/uuid_generators.hpp])
 dnl AX_CHECK_BOOST_HEADER([boost/uuid/uuid_io.hpp])
 
-AS_IF([test "x$have_networking" = "xtrue"],
+AS_IF([test "x$have_networking" = "xtrue" -a "x$build_switch" != "xtrue"],
       [ AC_LANG_PUSH(C++)
         AC_CHECK_HEADER([asio.hpp], , [AC_MSG_ERROR([You need asio to build Aleph One.])])
         AC_LANG_POP(C++) ])

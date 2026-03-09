@@ -4,6 +4,15 @@ noinst_LIBRARIES = libnetwork.a
 
 if BUILD_NETWORKING
 SUBDIRS = Metaserver StandaloneHub
+if BUILD_SWITCH
+NETWORK_SOURCES = NetworkInterface_switch.cpp ConnectPool.cpp network.cpp network_capabilities.cpp \
+  network_dialogs.cpp network_dialog_widgets_sdl.cpp \
+  network_games.cpp network_messages.cpp				  \
+  network_star_hub.cpp network_star_spoke.cpp network_udp.cpp \
+  SSLP_limited.cpp StarGameProtocol.cpp	  \
+  Update.cpp HTTP.cpp PortForward.cpp Pinger.cpp
+NETWORK_EXTRA_SOURCES = NetworkInterface.cpp network_dummy.cpp
+else
 NETWORK_SOURCES = NetworkInterface.cpp ConnectPool.cpp network.cpp network_capabilities.cpp \
   network_dialogs.cpp network_dialog_widgets_sdl.cpp \
   network_games.cpp network_messages.cpp				  \
@@ -11,6 +20,7 @@ NETWORK_SOURCES = NetworkInterface.cpp ConnectPool.cpp network.cpp network_capab
   SSLP_limited.cpp StarGameProtocol.cpp	  \
   Update.cpp HTTP.cpp PortForward.cpp Pinger.cpp
 NETWORK_EXTRA_SOURCES = network_dummy.cpp
+endif
 else
 SUBDIRS = Metaserver
 NETWORK_SOURCES = ConnectPool.cpp network.cpp network_capabilities.cpp \

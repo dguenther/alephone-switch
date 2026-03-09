@@ -30,6 +30,95 @@
 
 #if !defined(DISABLE_NETWORKING)
 
+#if defined(__SWITCH__)
+
+class IPaddress {
+private:
+    uint16_t _port = 0;
+    std::array<unsigned char, 4> _address{0, 0, 0, 0};
+
+public:
+    IPaddress() = default;
+    IPaddress(const std::string& host, uint16_t port);
+    IPaddress(const uint8_t ip[4], uint16_t port);
+    bool is_v4() const { return true; }
+    std::string address() const;
+    std::array<unsigned char, 4> address_bytes() const { return _address; }
+    uint16_t port() const { return _port; }
+    void set_port(uint16_t port) { _port = port; }
+    void set_address(const std::string& host);
+    void set_address(const uint8_t ip[4]);
+
+    bool operator==(const IPaddress& other) const;
+    bool operator!=(const IPaddress& other) const;
+};
+
+/* missing from AppleTalk.h */
+// ZZZ: note that this determines only the amount of storage allocated for packets, not
+// the size of actual packets sent.  I believe UDP on Ethernet should be able to carry
+// around 1.5K per packet, not sure of the exact figure off the top of my head though.
+#define ddpMaxData 1500
+
+struct UDPpacket
+{
+    IPaddress address;
+    std::array<uint8_t, ddpMaxData> buffer;
+    int data_size;
+};
+
+class UDPsocket {
+private:
+    int _socket_fd = -1;
+    UDPpacket* _receive_async_packet = nullptr;
+    UDPsocket(int socket_fd);
+    friend class NetworkInterface;
+public:
+    ~UDPsocket();
+    int64_t broadcast_send(const UDPpacket& packet);
+    int64_t send(const UDPpacket& packet);
+    int64_t receive(UDPpacket& packet);
+    void register_receive_async(UDPpacket& packet);
+    int64_t receive_async(int timeout_ms);
+    bool broadcast(bool enable);
+    int64_t check_receive() const;
+};
+
+class TCPsocket {
+private:
+    int _socket_fd = -1;
+    TCPsocket(int socket_fd);
+    friend class NetworkInterface;
+    friend class TCPlistener;
+public:
+    ~TCPsocket();
+    int64_t send(uint8_t* buffer, size_t size);
+    int64_t receive(uint8_t* buffer, size_t size);
+    IPaddress remote_address() const;
+    bool set_non_blocking(bool enable);
+};
+
+class TCPlistener {
+private:
+    int _socket_fd = -1;
+    TCPlistener(int socket_fd);
+    friend class NetworkInterface;
+public:
+    ~TCPlistener();
+    std::unique_ptr<TCPsocket> accept_connection();
+    bool set_non_blocking(bool enable);
+};
+
+class NetworkInterface {
+public:
+    NetworkInterface() = default;
+    std::unique_ptr<UDPsocket> udp_open_socket(uint16_t port);
+    std::unique_ptr<TCPsocket> tcp_connect_socket(const IPaddress& address);
+    std::unique_ptr<TCPlistener> tcp_open_listener(uint16_t port);
+    std::optional<IPaddress> resolve_address(const std::string& host, uint16_t port);
+};
+
+#else
+
 #include <asio.hpp>
 
 class IPaddress {
@@ -128,6 +217,8 @@ public:
     std::unique_ptr<TCPlistener> tcp_open_listener(uint16_t port);
     std::optional<IPaddress> resolve_address(const std::string& host, uint16_t port);
 };
+
+#endif // __SWITCH__
 
 #else
 

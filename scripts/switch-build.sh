@@ -61,13 +61,18 @@ echo "[switch-build] Regenerating autotools files"
 echo "[switch-build] Configuring cross-build in ${BUILD_DIR}"
 (
   cd "${BUILD_DIR}"
+  NETWORKING_ARG="--enable-networking"
+  if [[ "${SWITCH_DISABLE_NETWORKING:-0}" == "1" ]]; then
+    NETWORKING_ARG="--disable-networking"
+  fi
+
   "${ROOT_DIR}/configure" \
     --host=aarch64-none-elf \
     --build="$(gcc -dumpmachine)" \
     --with-boost="${DEVKITPRO}/portlibs/switch" \
     --with-boost-libdir="${DEVKITPRO}/portlibs/switch/lib" \
     --with-boost-filesystem=boost_filesystem \
-    --disable-networking \
+    "${NETWORKING_ARG}" \
     --enable-opengl \
     --disable-steam \
     --without-curl \

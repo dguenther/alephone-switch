@@ -6,6 +6,8 @@
 #include <SDL2/SDL_main.h>
 
 #ifdef __SWITCH__
+#include "switch_network.h"
+
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -24,12 +26,10 @@ static int s_nxlinkSock = -1;
 
 static void initNxLink()
 {
-    if (R_FAILED(socketInitializeDefault()))
+    if (!switch_network_ready())
         return;
 
     s_nxlinkSock = nxlinkStdio();
-    if (s_nxlinkSock < 0)
-        socketExit();
 }
 
 static void deinitNxLink()
@@ -37,19 +37,20 @@ static void deinitNxLink()
     if (s_nxlinkSock >= 0)
     {
         close(s_nxlinkSock);
-        socketExit();
         s_nxlinkSock = -1;
     }
 }
 
 extern "C" void userAppInit()
 {
+    switch_network_init();
     initNxLink();
 }
 
 extern "C" void userAppExit()
 {
     deinitNxLink();
+    switch_network_shutdown();
 }
 
 alignas(16) __attribute__((used)) u8 __nx_exception_stack[0x1000];

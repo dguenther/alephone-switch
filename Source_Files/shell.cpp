@@ -115,6 +115,7 @@
 
 #ifdef __SWITCH__
 #include "switch_display.h"
+#include "switch_network.h"
 #endif
 
 #ifdef HAVE_STEAM
@@ -606,7 +607,11 @@ void shutdown_application(void)
 bool networking_available(void)
 {
 #if !defined(DISABLE_NETWORKING)
+#ifdef __SWITCH__
+	return switch_network_ready();
+#else
 	return true;
+#endif
 #else
 	return false;
 #endif
