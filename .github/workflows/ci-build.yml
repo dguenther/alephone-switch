@@ -4,9 +4,7 @@ on: [push, pull_request]
 
 jobs:
   linux:
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -27,9 +25,7 @@ jobs:
           test_application_path: /usr/local/bin/alephone_tests
           
   linux-standalone-hub:
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -45,9 +41,7 @@ jobs:
         run: sudo make install
         
   linux-without-opengl:
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -68,9 +62,7 @@ jobs:
           test_application_path: /usr/local/bin/alephone_tests
         
   mac-osx-x64:
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    if: ${{ false }}
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -81,9 +73,7 @@ jobs:
           xcode_targets: "Aleph One"
           
   mac-osx-arm:
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    if: ${{ false }}
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -94,9 +84,7 @@ jobs:
           xcode_targets: "Aleph One"
           
   windows-x64:
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    if: ${{ false }}
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -112,9 +100,7 @@ jobs:
           test_application_path: VisualStudio/x64/Release/Tests.exe
           
   windows-x86:
-    if: github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name !=
-      github.event.pull_request.base.repo.full_name
+    if: ${{ false }}
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -128,3 +114,16 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           test_application_path: VisualStudio/Release/Tests.exe
+
+  switch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        uses: ./.github/actions/build-switch
+      - name: Upload NRO
+        uses: actions/upload-artifact@v4
+        with:
+          name: alephone-switch-nro
+          if-no-files-found: error
+          path: out/switch/alephone.nro

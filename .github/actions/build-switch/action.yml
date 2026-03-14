@@ -1,0 +1,56 @@
+name: build-switch
+description: template used to build for mac osx
+
+inputs:
+  jobs:
+    description: Optional make parallelism override passed through to scripts/switch-build.sh
+    required: false
+  version:
+    description: Optional Switch release version passed through to scripts/switch-build.sh
+    required: false
+
+outputs:
+  nro_path:
+    description: Path to the generated NRO artifact
+    value: out/switch/alephone.nro
+
+runs:
+  using: composite
+  steps:
+    - name: Build Switch container image
+      shell: bash
+      run: |
+        set -euo pipefail
+        docker build -t alephone-switch:ci -f switch/Containerfile .
+
+    - name: Build Switch NRO inside container
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        env_args=()
+        switch_version="${{ inputs.version }}"
+        if [[ -n "${{ inputs.jobs }}" ]]; then
+          env_args+=("-e" "JOBS=${{ inputs.jobs }}")
+        fi
+
+        if [[ -z "${switch_version}" ]]; then
+          switch_version="${GITHUB_SHA::15}"
+        fi
+        env_args+=("-e" "SWITCH_VERSION=${switch_version}")
+
+        docker run --rm \
+          --user "$(id -u):$(id -g)" \
+          "${env_args[@]}" \
+          -v "${GITHUB_WORKSPACE}:/work" \
+          -w /work \
+          alephone-switch:ci \
+          bash ./scripts/switch-build.sh
+
+    - name: Verify Switch artifact
+      shell: bash
+      run: |
+        set -euo pipefail
+        test -f out/switch/alephone.nro
+
+  

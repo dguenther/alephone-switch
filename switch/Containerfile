@@ -1,4 +1,4 @@
-FROM localhost/pacman-packages-switch-audio-test:latest
+FROM ghcr.io/dguenther/pacman-packages:extra
 
 ENV DEVKITPRO=/opt/devkitpro \
     DEVKITARM=/opt/devkitpro/devkitA64 \

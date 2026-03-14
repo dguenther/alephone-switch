@@ -40,6 +40,11 @@ else
   JOBS="${JOBS:-1}"
 fi
 
+SWITCH_VERSION="${SWITCH_VERSION:-dev}"
+if [[ "${SWITCH_VERSION}" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+  SWITCH_VERSION="${BASH_REMATCH[1]}"
+fi
+
 ARCH_FLAGS="-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE"
 export PKG_CONFIG="aarch64-none-elf-pkg-config"
 export CC="aarch64-none-elf-gcc"
@@ -103,7 +108,7 @@ if [[ ! -f "${ICON_PATH}" ]]; then
 fi
 
 cp -f "${ALEPHONE_ELF}" "${OUT_DIR}/alephone.elf"
-nacptool --create "Aleph One" "Aleph One Team" "0.1.0" "${OUT_DIR}/alephone.nacp"
+nacptool --create "Aleph One" "Aleph One Team" "${SWITCH_VERSION}" "${OUT_DIR}/alephone.nacp"
 elf2nro "${OUT_DIR}/alephone.elf" "${OUT_DIR}/alephone.nro" --nacp="${OUT_DIR}/alephone.nacp" --icon="${ICON_PATH}"
 
 echo "[switch-build] Output: ${OUT_DIR}/alephone.nro"

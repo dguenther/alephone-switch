@@ -1,0 +1,40 @@
+name: release-switch
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release-switch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Switch NRO
+        uses: ./.github/actions/build-switch
+        with:
+          version: ${{ github.ref_name }}
+
+      - name: Package release asset
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          safe_tag_name="${GITHUB_REF_NAME//\//-}"
+          asset_path="out/switch/alephone-switch-${safe_tag_name}.zip"
+
+          rm -f "${asset_path}"
+          zip -j "${asset_path}" out/switch/alephone.nro
+
+          echo "asset_path=${asset_path}" >> "${GITHUB_OUTPUT}"
+
+      - name: Attach NRO to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.package.outputs.asset_path }}
+          fail_on_unmatched_files: true
